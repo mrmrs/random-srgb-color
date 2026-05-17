@@ -1,15 +1,15 @@
 const test = require('ava');
 const randomSRGBColor = require('./');
 
-test.serial('returns a valid sRGB color', (t) => {
+test('returns a valid sRGB color with two-decimal channels and no alpha', (t) => {
   for (let i = 0; i < 10; i++) {
     const color = randomSRGBColor();
 
-    t.regex(color, /^color\(srgb -?\d+(?:\.\d+)?%? -?\d+(?:\.\d+)?%? -?\d+(?:\.\d+)?%?(?: \/ -?\d+(?:\.\d+)?%?)?\)$/);
+    t.regex(color, /^color\(srgb (?:0\.\d{2}|1\.00) (?:0\.\d{2}|1\.00) (?:0\.\d{2}|1\.00)\)$/);
   }
 });
 
-test.serial('omits alpha unless an alpha range is supplied', (t) => {
+test.serial('omits alpha when no alpha range is supplied', (t) => {
   withRandomValues([0.1, 0.2, 0.3], () => {
     t.is(randomSRGBColor(), 'color(srgb 0.10 0.20 0.30)');
   });
@@ -17,6 +17,16 @@ test.serial('omits alpha unless an alpha range is supplied', (t) => {
   withRandomValues([0.1, 0.2, 0.3, 0.4], () => {
     t.is(randomSRGBColor(0, 1, 0, 1, 0, 1, 0, 1), 'color(srgb 0.10 0.20 0.30 / 0.40)');
   });
+});
+
+test('treats undefined alpha arguments as omission', (t) => {
+  const result = randomSRGBColor(0, 1, 0, 1, 0, 1, undefined, undefined);
+  t.notRegex(result, / \/ /);
+});
+
+test('includes alpha when only one alpha argument is supplied', (t) => {
+  t.regex(randomSRGBColor(0, 1, 0, 1, 0, 1, 0.5), / \/ /);
+  t.regex(randomSRGBColor(0, 1, 0, 1, 0, 1, undefined, 0.5), / \/ /);
 });
 
 test.serial('keeps percentage values within the requested range', (t) => {
@@ -29,7 +39,45 @@ test.serial('keeps percentage values within the requested range', (t) => {
   });
 });
 
-test.serial('validates range values', (t) => {
+test.serial('decimal output never exceeds the requested max', (t) => {
+  withRandomValues([0.9999999, 0.9999999, 0.9999999], () => {
+    const color = randomSRGBColor(0, 0.5, 0, 0.5, 0, 0.5);
+    t.is(color, 'color(srgb 0.50 0.50 0.50)');
+  });
+});
+
+test.serial('integer percentage range can reach its inclusive maximum', (t) => {
+  withRandomValues([0.9999999, 0.9999999, 0.9999999], () => {
+    t.is(randomSRGBColor(0, 100, 0, 100, 0, 100), 'color(srgb 100% 100% 100%)');
+  });
+});
+
+test('emits mixed units when channels use different range styles', (t) => {
+  const color = randomSRGBColor(0, 1, 0, 100, 0, 1);
+  t.regex(color, /^color\(srgb (?:0\.\d{2}|1\.00) \d{1,3}% (?:0\.\d{2}|1\.00)\)$/);
+});
+
+test.serial('validates ranges before generating any random values', (t) => {
+  const originalRandom = Math.random;
+  let calls = 0;
+  Math.random = () => {
+    calls++;
+    return 0.5;
+  };
+
+  try {
+    t.throws(() => randomSRGBColor(0, 1, 0, 1, 1, 0), {
+      instanceOf: RangeError,
+      message: 'blue minimum must be less than or equal to maximum'
+    });
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  t.is(calls, 0);
+});
+
+test('validates range values', (t) => {
   t.throws(() => randomSRGBColor(Number.NaN), {
     instanceOf: TypeError,
     message: 'red range must use finite numbers'
@@ -38,6 +86,11 @@ test.serial('validates range values', (t) => {
   t.throws(() => randomSRGBColor(1, 0), {
     instanceOf: RangeError,
     message: 'red minimum must be less than or equal to maximum'
+  });
+
+  t.throws(() => randomSRGBColor(0, 1, 0, 1, 0, 1, 2, 1), {
+    instanceOf: RangeError,
+    message: 'alpha minimum must be less than or equal to maximum'
   });
 });
 
