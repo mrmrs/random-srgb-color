@@ -1,4 +1,4 @@
-const test = require('ava');
+const test = require('ava').default;
 const randomSRGBColor = require('./');
 
 test('returns a valid sRGB color with two-decimal channels and no alpha', (t) => {
