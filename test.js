@@ -29,6 +29,25 @@ test('includes alpha when only one alpha argument is supplied', (t) => {
   t.regex(randomSRGBColor(0, 1, 0, 1, 0, 1, undefined, 0.5), / \/ /);
 });
 
+test('returns numeric channels when useObjectExport is true', (t) => {
+  const color = randomSRGBColor(0, 1, 0, 1, 0, 1, 0, 1, true);
+
+  t.is(typeof color, 'object');
+  t.is(typeof color.red, 'number');
+  t.is(typeof color.green, 'number');
+  t.is(typeof color.blue, 'number');
+  t.is(typeof color.alpha, 'number');
+  t.true(color.red >= 0 && color.red <= 1);
+  t.true(color.green >= 0 && color.green <= 1);
+  t.true(color.blue >= 0 && color.blue <= 1);
+  t.true(color.alpha >= 0 && color.alpha <= 1);
+});
+
+test('omits alpha from object output when not requested', (t) => {
+  const color = randomSRGBColor(0, 1, 0, 1, 0, 1, undefined, undefined, true);
+  t.false('alpha' in color);
+});
+
 test.serial('keeps percentage values within the requested range', (t) => {
   withRandomValues([0.73, 0.58, 0.24, 0.5], () => {
     t.is(randomSRGBColor(0, 100, 0, 100, 0, 100, 0, 100), 'color(srgb 73% 58% 24% / 50%)');
