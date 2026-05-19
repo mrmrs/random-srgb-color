@@ -14,7 +14,7 @@ module.exports = function randomSRGBColor(
   validateRange('red', minRed, maxRed);
   validateRange('green', minGreen, maxGreen);
   validateRange('blue', minBlue, maxBlue);
-  if (includeAlpha) validateRange('alpha', alphaLow, alphaHigh);
+  if (includeAlpha) validateAlphaRange(alphaLow, alphaHigh);
 
   const red = randomChannelNumber(minRed, maxRed);
   const green = randomChannelNumber(minGreen, maxGreen);
@@ -67,5 +67,13 @@ function validateRange(channel, min, max) {
   }
   if (min > max) {
     throw new RangeError(`${channel} minimum must be less than or equal to maximum`);
+  }
+}
+
+function validateAlphaRange(min, max) {
+  validateRange('alpha', min, max);
+
+  if (min < 0 || max > 100) {
+    throw new RangeError('alpha range must be between 0 and 100');
   }
 }

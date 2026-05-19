@@ -44,7 +44,7 @@ Ranges at or below `1` are emitted as number channels, such as `0.42`. Ranges ab
 
 When `useObjectExport` is `true`, channels come back as raw numbers (not formatted strings), and `alpha` is omitted from the object when no alpha range was supplied.
 
-Every supplied range value must be a finite number, and every minimum must be less than or equal to its maximum. Invalid ranges throw `TypeError` or `RangeError`.
+Every supplied range value must be a finite number, and every minimum must be less than or equal to its maximum. Alpha ranges must stay between `0` and `100`, allowing either `0..1` number alpha or `0..100` percentage alpha. Invalid ranges throw `TypeError` or `RangeError`.
 
 ## Acknowledgements
 

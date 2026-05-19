@@ -111,6 +111,16 @@ test('validates range values', (t) => {
     instanceOf: RangeError,
     message: 'alpha minimum must be less than or equal to maximum'
   });
+
+  t.throws(() => randomSRGBColor(0, 1, 0, 1, 0, 1, -0.1, 1), {
+    instanceOf: RangeError,
+    message: 'alpha range must be between 0 and 100'
+  });
+
+  t.throws(() => randomSRGBColor(0, 1, 0, 1, 0, 1, 0, 100.1), {
+    instanceOf: RangeError,
+    message: 'alpha range must be between 0 and 100'
+  });
 });
 
 function withRandomValues(values, run) {
